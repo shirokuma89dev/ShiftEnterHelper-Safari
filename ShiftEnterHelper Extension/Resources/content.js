@@ -1,16 +1,16 @@
-// content.js (Cmd+Enterを許可する修正版)
-
 window.addEventListener('keydown', (event) => {
-    // 監視対象はテキストエリア、またはリッチテキストエディタ（role="textbox"）のみ
     const target = event.target;
+
+    // 監視対象の要素かどうかを判定する
     const isTextArea = target.tagName.toLowerCase() === 'textarea';
     const isTextboxRole = target.getAttribute('role') === 'textbox';
+    const isChatGPTTextarea = target.id === 'prompt-textarea'; // ChatGPT用の判定
 
-    if (!isTextArea && !isTextboxRole) {
-        // 対象外の場所でのキー操作は何もしない
+    // 上記のいずれにも当てはまらない場合は、何もしない
+    if (!isTextArea && !isTextboxRole && !isChatGPTTextarea) {
         return;
     }
-
+    
     // CmdキーやCtrlキーが押されている場合は、送信ショートカットなので何もしない
     if (event.metaKey || event.ctrlKey) {
         return;
@@ -19,31 +19,22 @@ window.addEventListener('keydown', (event) => {
     // 押されたキーがEnterで、Shiftキーが押されていない場合のみ処理
     if (event.key === 'Enter' && !event.shiftKey) {
 
-        // 日本語の変換確定のためのEnterキーの場合（isComposingがtrue）
+        // 日本語の変換確定のためのEnterキーの場合
         if (event.isComposing) {
-            // ClaudeのWebページにこのEnterキーイベントが伝わるのを完全に阻止する
+            // イベントの伝達を停止
             event.stopPropagation();
-            console.log("IME確定のEnterを検知。Claudeへの伝達を停止しました。");
             return;
         }
 
-        // --- 通常の処理（変換確定ではないEnter） ---
-        // デフォルトのEnterキーの動作（メッセージ送信）をキャンセル
+        // 通常のEnterキーの動作をキャンセル
         event.preventDefault();
         event.stopPropagation();
 
-        // Shift+Enterのキーイベントをプログラムで作成して実行する
+        // Shift+Enterのキーイベントをプログラムで作成して実行
         const shiftEnterEvent = new KeyboardEvent('keydown', {
-            key: 'Enter',
-            code: 'Enter',
-            keyCode: 13,
-            which: 13,
-            bubbles: true,
-            cancelable: true,
-            shiftKey: true // Shiftキーが押された状態にする
+            key: 'Enter', code: 'Enter', keyCode: 13, which: 13,
+            bubbles: true, cancelable: true, shiftKey: true
         });
-
         target.dispatchEvent(shiftEnterEvent);
-        console.log("通常のEnterをShift+Enterに変換しました。");
     }
 }, true);
